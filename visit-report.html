@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROLLOMATIC - Rapport de visite client</title>
+<style>
+  :root{
+    --primary:#003D7A;
+    --primary-light:#0052A3;
+    --accent:#D84315;
+    --bg:#F8F9FA;
+    --text:#2C3E50;
+    --border:#E0E0E0;
+    --white:#ffffff;
+    --shadow:0 2px 10px rgba(0,61,122,0.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Inter','Segoe UI',Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.5;
+    padding-bottom:80px;
+  }
+  header{
+    background:var(--primary);
+    color:#fff;
+    padding:20px 16px;
+    text-align:center;
+  }
+  header h1{font-size:1.5rem;font-weight:800;letter-spacing:0.5px;}
+  header p{font-size:0.85rem;opacity:0.85;margin-top:4px;}
+
+  .wrap{max-width:840px;margin:0 auto;padding:16px;}
+
+  .toolbar{
+    display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;
+    margin-bottom:14px;
+  }
+  .btn{
+    border:none;border-radius:8px;padding:10px 16px;font-size:0.9rem;
+    font-weight:600;cursor:pointer;transition:opacity .15s;
+  }
+  .btn:hover{opacity:.88;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-ghost{background:#fff;color:var(--primary);border:1px solid var(--border);}
+
+  .section{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:10px;
+    margin-bottom:12px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .section-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;cursor:pointer;user-select:none;
+    background:#fff;
+  }
+  .section-header h2{
+    font-size:1rem;color:var(--primary);font-weight:700;
+    display:flex;align-items:center;gap:8px;
+  }
+  .section-header .chevron{transition:transform .2s;color:var(--accent);font-weight:700;}
+  .section.open .chevron{transform:rotate(90deg);}
+  .section-body{
+    padding:0 16px 16px;
+    display:none;
+  }
+  .section.open .section-body{display:block;}
+
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-weight:600;font-size:0.85rem;color:var(--primary);margin-bottom:6px;
+  }
+  .field label .req{color:var(--accent);}
+  .field .hint{font-size:0.78rem;color:#8a98a6;margin-top:4px;}
+
+  input[type=text], input[type=url], input[type=date], input[type=number],
+  input[type=tel], input[type=email], select, textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--border);
+    border-radius:8px;font-size:0.92rem;font-family:inherit;color:var(--text);
+    background:#fff;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--primary-light);outline-offset:1px;}
+  textarea{resize:vertical;min-height:70px;}
+
+  input.invalid, textarea.invalid{border-color:var(--accent);}
+
+  /* datalist suggestion styling not customizable but fine */
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width:640px){.grid2{grid-template-columns:1fr;}}
+
+  /* Rich text editor */
+  .rte-toolbar{
+    display:flex;gap:4px;flex-wrap:wrap;
+    border:1px solid var(--border);border-bottom:none;
+    border-radius:8px 8px 0 0;background:#f0f2f5;padding:6px;
+  }
+  .rte-toolbar button{
+    border:1px solid transparent;background:transparent;border-radius:6px;
+    padding:5px 9px;cursor:pointer;font-size:0.85rem;color:var(--text);font-weight:600;
+  }
+  .rte-toolbar button:hover{background:#e2e6ea;}
+  .rte{
+    border:1px solid var(--border);border-radius:0 0 8px 8px;
+    min-height:120px;padding:10px 12px;font-size:0.92rem;background:#fff;
+  }
+  .rte:focus{outline:2px solid var(--primary-light);}
+  .rte ul, .rte ol{padding-left:24px;}
+
+  /* Dropzone */
+  .dropzone{
+    border:2px dashed var(--border);border-radius:10px;
+    padding:24px 12px;text-align:center;color:#8a98a6;
+    cursor:pointer;transition:border-color .15s,background .15s;
+    font-size:0.88rem;
+  }
+  .dropzone.dragover{border-color:var(--primary-light);background:#eef4fb;color:var(--primary);}
+  .dropzone strong{color:var(--primary);}
+
+  .file-gallery{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+    gap:10px;margin-top:12px;
+  }
+  .file-item{
+    position:relative;border:1px solid var(--border);border-radius:8px;
+    overflow:hidden;background:#fff;text-align:center;
+  }
+  .file-item img{width:100%;height:80px;object-fit:cover;display:block;}
+  .file-item .file-icon{
+    width:100%;height:80px;display:flex;align-items:center;justify-content:center;
+    font-size:1.8rem;background:var(--bg);color:var(--primary);
+  }
+  .file-item .file-name{
+    font-size:0.7rem;padding:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .file-item .file-remove{
+    position:absolute;top:3px;right:3px;background:var(--accent);color:#fff;
+    border:none;border-radius:50%;width:20px;height:20px;font-size:0.7rem;cursor:pointer;
+    line-height:20px;text-align:center;padding:0;
+  }
+  .file-item[draggable=true]{cursor:grab;}
+
+  /* radio toggle */
+  .toggle-group{display:flex;gap:10px;}
+  .toggle-group label{
+    display:flex;align-items:center;gap:6px;font-weight:500;font-size:0.9rem;
+    color:var(--text);cursor:pointer;border:1px solid var(--border);
+    border-radius:8px;padding:8px 14px;flex:1;justify-content:center;
+  }
+  .toggle-group input{width:auto;}
+  .toggle-group input:checked + span{font-weight:700;color:var(--primary);}
+
+  .autocomplete-wrap{position:relative;}
+  .autocomplete-list{
+    position:absolute;top:100%;left:0;right:0;background:#fff;
+    border:1px solid var(--border);border-radius:0 0 8px 8px;
+    max-height:160px;overflow-y:auto;z-index:10;display:none;
+    box-shadow:var(--shadow);
+  }
+  .autocomplete-list.show{display:block;}
+  .autocomplete-list div{padding:8px 12px;cursor:pointer;font-size:0.88rem;}
+  .autocomplete-list div:hover{background:var(--bg);}
+
+  .status-bar{
+    position:fixed;bottom:0;left:0;right:0;background:#fff;
+    border-top:1px solid var(--border);padding:10px 16px;
+    display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+    box-shadow:0 -2px 10px rgba(0,0,0,0.06);z-index:50;
+  }
+  .save-indicator{
+    font-size:0.78rem;color:#8a98a6;align-self:center;margin-right:auto;
+    display:flex;align-items:center;gap:6px;
+  }
+  @media (max-width:640px){
+    .save-indicator{order:99;width:100%;text-align:center;margin:4px 0 0;justify-content:center;}
+  }
+
+  /* Confirmation modal */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,30,60,0.5);
+    display:none;align-items:center;justify-content:center;z-index:100;padding:16px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:#fff;border-radius:12px;max-width:420px;width:100%;
+    padding:22px;text-align:center;
+  }
+  .modal h3{color:var(--primary);margin-bottom:10px;}
+  .modal p{font-size:0.9rem;color:var(--text);margin-bottom:18px;}
+  .modal .modal-actions{display:flex;gap:10px;justify-content:center;}
+
+  /* print */
+  @media print{
+    header, .toolbar, .status-bar, .dropzone, .rte-toolbar, .file-remove{display:none !important;}
+    .section{box-shadow:none;border:1px solid #ccc;}
+    .section-body{display:block !important;}
+    .section-header .chevron{display:none;}
+    body{padding-bottom:0;}
+    .field label .req{color:#000;}
+  }
+
+  .badge-example{
+    display:inline-block;background:#FFF3E0;color:var(--accent);
+    border:1px solid #FFCCBC;border-radius:6px;padding:2px 8px;font-size:0.72rem;
+    font-weight:700;margin-left:8px;vertical-align:middle;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ROLLOMATIC — Rapport de visite client</h1>
+  <p>Formulaire interactif pour comptes-rendus de visites commerciales</p>
+</header>
+
+<div class="wrap">
+  <div class="toolbar">
+    <button class="btn btn-ghost" id="btnLoadExample">📋 Charger l'exemple R.G.V. S.R.L.</button>
+    <button class="btn btn-ghost" id="btnClear">🗑️ Nouveau rapport</button>
+  </div>
+
+  <form id="visitForm">
+
+    <!-- 1. INFORMATIONS GENERALES -->
+    <div class="section open" data-section="general">
+      <div class="section-header">
+        <h2>🏢 Informations générales</h2>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="grid2">
+          <div class="field autocomplete-wrap">
+            <label>Customer <span class="req">*</span></label>
+            <input type="text" id="customerName" name="customerName" placeholder="Nom du client" autocomplete="off" required>
+            <div class="autocomplete-list" id="customerSuggestions"></div>
+          </div>
+          <div class="field">
+            <label>Customer website URL</label>
+            <input type="url" id="customerUrl" name="customerUrl" placeholder="https://www.exemple.com">
+          </div>
+          <div class="field">
+            <label>Visiting date <span class="req">*</span></label>
+            <input type="date" id="visitDate" name="visitDate" required>
+          </div>
+          <div class="field">
+            <label>Rollomatic contact (vendeur) <span class="req">*</span></label>
+            <input type="text" id="rolloContact" name="rolloContact" placeholder="Nom du vendeur Rollomatic" required>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. CONTACTS -->
+    <div class="section" data-section="contacts">
+      <div class="section-header">
+        <h2>👤 Contacts</h2>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Customer Contact(s)</label>
+          <textarea id="customerContacts" name="customerContacts" rows="4" placeholder="Ex: Mario Rossi - Directeur Production&#10;Luca Bianchi - Responsable Achats"></textarea>
+          <div class="hint">Une personne par ligne : nom + rôle/fonction</div>
+        </div>
+        <div class="field">
+          <label>Téléphone / Email (optionnel)</label>
+          <textarea id="contactDetails" name="contactDetails" rows="3" placeholder="Ex: mario.rossi@exemple.com / +39 02 1234567"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PROFIL ENTREPRISE -->
+    <div class="section" data-section="profile">
+      <div class="section-header">
+        <h2>🏭 Profil entreprise</h2>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Company profile</label>
+          <div class="rte-toolbar" data-target="companyProfile">
+            <button type="button" data-cmd="bold"><b>B</b></button>
+            <button type="button" data-cmd="italic"><i>I</i></button>
+            <button type="button" data-cmd="insertUnorderedList">• Liste</button>
+            <button type="button" data-cmd="insertOrderedList">1. Liste</button>
+            <button type="button" data-cmd="formatBlock" data-value="H3">Titre</button>
+            <button type="button" data-cmd="formatBlock" data-value="P">Texte</button>
+          </div>
+          <div class="rte" id="companyProfile" contenteditable="true" data-placeholder="Décrivez l'activité de l'entreprise, son organisation, ses marchés..."></div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Secteur d'activité</label>
+            <select id="sector" name="sector">
+              <option value="">— Sélectionner —</option>
+              <option value="machine-tools">Machines-outils</option>
+              <option value="automotive">Automobile</option>
+              <option value="aerospace">Aéronautique</option>
+              <option value="other">Autre</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Nombre d'employés</label>
+            <input type="number" id="employees" name="employees" min="0" placeholder="Ex: 120">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. SITUATION ATELIER -->
+    <div class="section" data-section="workshop">
+      <div class="section-header">
+        <h2>⚙️ Situation atelier / usine</h2>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Equipement présent</label>
+          <textarea id="equipment" name="equipment" rows="4" placeholder="Liste des machines observées : marque, modèle, année, état..."></textarea>
+        </div>
+        <div class="field">
+          <label>Photos de l'atelier</label>
+          <div class="dropzone" data-target="workshopPhotos">
+            <strong>Cliquez</strong> ou déposez des images ici
+            <input type="file" accept="image/*" multiple hidden>
+          </div>
+          <div class="file-gallery" id="workshopPhotosGallery"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. SUJET & OBSERVATIONS -->
+    <div class="section" data-section="topic">
+      <div class="section-header">
+        <h2>💬 Sujet & observations</h2>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Topic de la visite <span class="req">*</span></label>
+          <input type="text" id="visitTopic" name="visitTopic" placeholder="Ex: Présentation GrindSmart 630XW pour renouvellement de parc" required>
+        </div>
+        <div class="field">
+          <label>Observations détaillées</label>
+          <div class="rte-toolbar" data-target="observations">
+            <button type="button" data-cmd="bold"><b>B</b></button>
+            <button type="button" data-cmd="italic"><i>I</i></button>
+            <button type="button" data-cmd="insertUnorderedList">• Liste</button>
+            <button type="button" data-cmd="insertOrderedList">1. Liste</button>
+            <button type="button" data-cmd="formatBlock" data-value="H3">Titre</button>
+            <button type="button" data-cmd="formatBlock" data-value="P">Texte</button>
+          </div>
+          <div class="rte" id="observations" contenteditable="true" data-placeholder="Notes détaillées sur la visite, besoins exprimés, contexte concurrentiel..."></div>
+        </div>
+        <div class="field">
+          <label>Documents annexes (PDF, Word, images)</label>
+          <div class="dropzone" data-target="topicDocs">
+            <strong>Cliquez</strong> ou déposez des fichiers ici (PDF, Word, images)
+            <input type="file" accept=".pdf,.doc,.docx,image/*" multiple hidden>
+          </div>
+          <div class="file-gallery" id="topicDocsGallery"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. ACTIONS & SUIVI -->
+    <div class="section" data-section="actions">
+      <div class="section-header">
+        <h2>✅ Actions & suivi</h2>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Sales : follow-up requis ?</label>
+          <div class="toggle-group">
+            <label><input type="radio" name="followUp" value="yes"><span>Oui</span></label>
+            <label><input type="radio" name="followUp" value="no" checked><span>Non</span></label>
+          </div>
+          <textarea id="followUpText" name="followUpText" rows="2" placeholder="Détails du suivi à effectuer..." style="margin-top:8px;"></textarea>
+        </div>
+        <div class="field">
+          <label>Applications</label>
+          <textarea id="actionApplications" name="actionApplications" rows="2" placeholder="Tests d'application, recommandations process..."></textarea>
+        </div>
+        <div class="field">
+          <label>Customer support / SAV</label>
+          <textarea id="actionSupport" name="actionSupport" rows="2" placeholder="Demandes de service après-vente, pièces, maintenance..."></textarea>
+        </div>
+        <div class="field">
+          <label>R&D Software</label>
+          <textarea id="actionRdSoftware" name="actionRdSoftware" rows="2" placeholder="Besoins logiciels, développements spécifiques..."></textarea>
+        </div>
+        <div class="field">
+          <label>R&D Mechanic</label>
+          <textarea id="actionRdMechanic" name="actionRdMechanic" rows="2" placeholder="Adaptations mécaniques, options à étudier..."></textarea>
+        </div>
+        <div class="field">
+          <label>Quality</label>
+          <textarea id="actionQuality" name="actionQuality" rows="2" placeholder="Points qualité, réclamations, certifications..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. PIECES JOINTES GLOBALES -->
+    <div class="section" data-section="attachments">
+      <div class="section-header">
+        <h2>📎 Pièces jointes globales</h2>
+        <span class="chevron">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label>Dossier de photos / documents</label>
+          <div class="dropzone" data-target="globalAttachments">
+            <strong>Cliquez</strong> ou déposez vos fichiers ici (toutes pièces jointes du rapport)
+            <input type="file" multiple hidden>
+          </div>
+          <div class="file-gallery" id="globalAttachmentsGallery"></div>
+          <div class="hint">Glissez les vignettes pour réordonner.</div>
+        </div>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<div class="status-bar">
+  <div class="save-indicator" id="saveIndicator">💾 Brouillon non sauvegardé</div>
+  <button type="button" class="btn btn-ghost" id="btnSaveDraft">Enregistrer brouillon</button>
+  <button type="button" class="btn btn-primary" id="btnSubmit">Soumettre</button>
+  <button type="button" class="btn btn-accent" id="btnPdf">Télécharger PDF</button>
+</div>
+
+<!-- Confirmation modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3>Confirmer la soumission</h3>
+    <p>Le rapport sera marqué comme soumis et sauvegardé localement. Voulez-vous continuer ?</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelSubmit">Annuler</button>
+      <button class="btn btn-primary" id="confirmSubmit">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== CONSTANTS ===================== */
+const STORAGE_KEY = "rollomatic_visit_report_draft";
+const KNOWN_CUSTOMERS = [
+  "R.G.V. S.R.L. (Treviglio)",
+  "ACME Tooling GmbH",
+  "Precitool SA",
+  "MicroDrill Sweden AB",
+  "Aero Components Ltd"
+];
+
+const RTE_IDS = ["companyProfile", "observations"];
+const DROPZONES = ["workshopPhotos", "topicDocs", "globalAttachments"];
+
+/* Each dropzone keeps an array of {id, name, type, dataUrl} */
+const files = {
+  workshopPhotos: [],
+  topicDocs: [],
+  globalAttachments: []
+};
+
+/* ===================== ACCORDION ===================== */
+document.querySelectorAll(".section-header").forEach(header => {
+  header.addEventListener("click", () => {
+    header.closest(".section").classList.toggle("open");
+  });
+});
+
+/* ===================== RICH TEXT EDITOR ===================== */
+document.querySelectorAll(".rte-toolbar").forEach(toolbar => {
+  const targetId = toolbar.dataset.target;
+  const target = document.getElementById(targetId);
+  toolbar.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      target.focus();
+      const cmd = btn.dataset.cmd;
+      const value = btn.dataset.value || "";
+      document.execCommand(cmd, false, value);
+      scheduleSave();
+    });
+  });
+});
+
+RTE_IDS.forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener("input", scheduleSave);
+  el.addEventListener("focus", () => {
+    if (el.dataset.placeholderShown === "1") {
+      el.innerHTML = "";
+      el.dataset.placeholderShown = "";
+    }
+  });
+  el.addEventListener("blur", () => applyPlaceholder(el));
+});
+
+function applyPlaceholder(el) {
+  if (el.innerHTML.trim() === "") {
+    el.innerHTML = `<span style="color:#aab4bd;">${el.dataset.placeholder}</span>`;
+    el.dataset.placeholderShown = "1";
+  }
+}
+
+/* ===================== AUTOCOMPLETE ===================== */
+const customerInput = document.getElementById("customerName");
+const suggestionsBox = document.getElementById("customerSuggestions");
+
+customerInput.addEventListener("input", () => {
+  const val = customerInput.value.trim().toLowerCase();
+  if (!val) { suggestionsBox.classList.remove("show"); return; }
+  const matches = KNOWN_CUSTOMERS.filter(c => c.toLowerCase().includes(val));
+  if (matches.length === 0) { suggestionsBox.classList.remove("show"); return; }
+  suggestionsBox.innerHTML = matches.map(m => `<div>${m}</div>`).join("");
+  suggestionsBox.classList.add("show");
+  scheduleSave();
+});
+
+suggestionsBox.addEventListener("click", e => {
+  if (e.target.tagName === "DIV") {
+    customerInput.value = e.target.textContent;
+    suggestionsBox.classList.remove("show");
+    scheduleSave();
+  }
+});
+
+document.addEventListener("click", e => {
+  if (!customerInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+    suggestionsBox.classList.remove("show");
+  }
+});
+
+/* ===================== DROPZONES / FILE UPLOAD ===================== */
+DROPZONES.forEach(key => {
+  const zone = document.querySelector(`.dropzone[data-target="${key}"]`);
+  const input = zone.querySelector("input[type=file]");
+  const gallery = document.getElementById(key + "Gallery");
+
+  zone.addEventListener("click", () => input.click());
+  input.addEventListener("change", () => handleFiles(key, input.files, gallery));
+
+  ["dragover", "dragenter"].forEach(evt =>
+    zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.add("dragover"); })
+  );
+  ["dragleave", "drop"].forEach(evt =>
+    zone.addEventListener(evt, e => { e.preventDefault(); zone.classList.remove("dragover"); })
+  );
+  zone.addEventListener("drop", e => {
+    if (e.dataTransfer.files.length) handleFiles(key, e.dataTransfer.files, gallery);
+  });
+});
+
+function handleFiles(key, fileList, gallery) {
+  [...fileList].forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      files[key].push({
+        id: Date.now() + "_" + Math.random().toString(36).slice(2),
+        name: file.name,
+        type: file.type,
+        dataUrl: reader.result
+      });
+      renderGallery(key, gallery);
+      scheduleSave();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderGallery(key, gallery) {
+  gallery.innerHTML = "";
+  files[key].forEach((f, idx) => {
+    const item = document.createElement("div");
+    item.className = "file-item";
+    item.draggable = true;
+    item.dataset.id = f.id;
+
+    const isImage = f.type.startsWith("image/");
+    item.innerHTML = `
+      ${isImage
+        ? `<img src="${f.dataUrl}" alt="${escapeHtml(f.name)}">`
+        : `<div class="file-icon">📄</div>`}
+      <div class="file-name" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</div>
+      <button type="button" class="file-remove" title="Supprimer">✕</button>
+    `;
+
+    item.querySelector(".file-remove").addEventListener("click", () => {
+      files[key].splice(idx, 1);
+      renderGallery(key, gallery);
+      scheduleSave();
+    });
+
+    item.addEventListener("dragstart", e => {
+      e.dataTransfer.setData("text/plain", f.id);
+      e.dataTransfer.effectAllowed = "move";
+    });
+    item.addEventListener("dragover", e => e.preventDefault());
+    item.addEventListener("drop", e => {
+      e.preventDefault();
+      const draggedId = e.dataTransfer.getData("text/plain");
+      const fromIdx = files[key].findIndex(x => x.id === draggedId);
+      const toIdx = files[key].findIndex(x => x.id === f.id);
+      if (fromIdx > -1 && toIdx > -1 && fromIdx !== toIdx) {
+        const [moved] = files[key].splice(fromIdx, 1);
+        files[key].splice(toIdx, 0, moved);
+        renderGallery(key, gallery);
+        scheduleSave();
+      }
+    });
+
+    gallery.appendChild(item);
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ===================== VALIDATION ===================== */
+const requiredFields = ["customerName", "visitDate", "rolloContact", "visitTopic"];
+
+function validateField(el) {
+  if (el.hasAttribute("required") && !el.value.trim()) {
+    el.classList.add("invalid");
+    return false;
+  }
+  el.classList.remove("invalid");
+  return true;
+}
+
+requiredFields.forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener("blur", () => validateField(el));
+  el.addEventListener("input", () => { el.classList.remove("invalid"); scheduleSave(); });
+});
+
+function validateAll() {
+  let valid = true;
+  requiredFields.forEach(id => {
+    if (!validateField(document.getElementById(id))) {
+      valid = false;
+    }
+  });
+  return valid;
+}
+
+/* ===================== AUTOSAVE / LOCALSTORAGE ===================== */
+let saveTimeout = null;
+function scheduleSave() {
+  const indicator = document.getElementById("saveIndicator");
+  indicator.textContent = "✏️ Modifications en cours...";
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveDraft, 800);
+}
+
+function collectFormData() {
+  const data = { fields: {}, files: {} };
+  document.querySelectorAll("#visitForm input, #visitForm select, #visitForm textarea").forEach(el => {
+    if (!el.id && !el.name) return;
+    const key = el.id || el.name;
+    if (el.type === "radio") {
+      if (el.checked) data.fields[el.name] = el.value;
+    } else {
+      data.fields[key] = el.value;
+    }
+  });
+  RTE_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    data.fields[id] = el.dataset.placeholderShown === "1" ? "" : el.innerHTML;
+  });
+  DROPZONES.forEach(key => { data.files[key] = files[key]; });
+
+  document.querySelectorAll(".section").forEach(sec => {
+    data["open_" + sec.dataset.section] = sec.classList.contains("open");
+  });
+
+  return data;
+}
+
+function saveDraft() {
+  const data = collectFormData();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  const indicator = document.getElementById("saveIndicator");
+  const now = new Date();
+  indicator.textContent = `💾 Brouillon sauvegardé à ${now.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"})}`;
+}
+
+function loadDraft(data) {
+  Object.entries(data.fields || {}).forEach(([key, value]) => {
+    if (RTE_IDS.includes(key)) {
+      const el = document.getElementById(key);
+      if (value) {
+        el.innerHTML = value;
+        el.dataset.placeholderShown = "";
+      } else {
+        applyPlaceholder(el);
+      }
+      return;
+    }
+    const radios = document.querySelectorAll(`#visitForm input[name="${key}"]`);
+    if (radios.length > 1 && radios[0].type === "radio") {
+      radios.forEach(r => r.checked = (r.value === value));
+      return;
+    }
+    const el = document.getElementById(key);
+    if (el) el.value = value;
+  });
+
+  DROPZONES.forEach(key => {
+    files[key] = (data.files && data.files[key]) || [];
+    renderGallery(key, document.getElementById(key + "Gallery"));
+  });
+
+  document.querySelectorAll(".section").forEach(sec => {
+    const openKey = "open_" + sec.dataset.section;
+    if (data[openKey] !== undefined) {
+      sec.classList.toggle("open", data[openKey]);
+    }
+  });
+}
+
+/* Attach autosave to all standard inputs */
+document.querySelectorAll("#visitForm input, #visitForm select, #visitForm textarea").forEach(el => {
+  el.addEventListener("input", scheduleSave);
+  el.addEventListener("change", scheduleSave);
+});
+
+/* ===================== EXAMPLE DATA (R.G.V. S.R.L.) ===================== */
+const EXAMPLE_DATA = {
+  fields: {
+    customerName: "R.G.V. S.R.L. (Treviglio)",
+    customerUrl: "https://www.rgvsrl.it",
+    visitDate: new Date().toISOString().slice(0, 10),
+    rolloContact: "Marco Ferrari",
+    customerContacts: "Giovanni Conti - Direttore Generale\nElena Marchetti - Responsabile Acquisti\nPaolo Riva - Capo Reparto Produzione",
+    contactDetails: "g.conti@rgvsrl.it / +39 0363 123456",
+    companyProfile: "<h3>R.G.V. S.R.L.</h3><p>Entreprise familiale basée à Treviglio (Italie), spécialisée dans la <b>fabrication de forets carbure</b> pour l'industrie automobile et générale. Présente sur le marché depuis plus de 30 ans, avec une croissance régulière de la demande pour des outils de précision.</p><ul><li>Production en série moyenne à importante</li><li>Forte orientation export (Europe et Amérique du Sud)</li><li>Volonté de moderniser le parc machines existant</li></ul>",
+    sector: "automotive",
+    employees: "85",
+    equipment: "2x Walter Helitronic Power (2012, usées)\n1x ANCA MX7 Linear (2018)\n3 postes de contrôle qualité manuel\nAtelier climatisé, bonne organisation générale, zone de stockage outils séparée",
+    visitTopic: "Présentation GrindSmart® 620XS pour remplacement des machines Walter vieillissantes",
+    observations: "<p>Visite réalisée dans le cadre du renouvellement annoncé du parc de rectifieuses. Le client souhaite <b>augmenter sa capacité de production de forets carbure Ø1-12mm</b> tout en réduisant les temps de changement de série.</p><p>Points clés :</p><ul><li>Intérêt marqué pour la <i>polyvalence</i> de la 620XS (forets + outils de précision)</li><li>Question sur la compatibilité avec leur logiciel CAO existant</li><li>Budget envisagé pour Q3, décision avant fin d'année</li></ul><p>Concurrent ANCA déjà présent dans l'atelier - bonne opinion générale mais ouverts à une alternative.</p>",
+    followUpText: "Envoyer documentation technique 620XS + organiser visite showroom Rollomatic (Le Locle) avec M. Conti et M. Riva avant fin du mois.",
+    actionApplications: "Préparer une simulation de cycle de production pour foret carbure Ø6mm, longueur 80mm, en comparaison avec leur cycle actuel sur Walter.",
+    actionSupport: "RAS - pas de demande SAV particulière lors de cette visite.",
+    actionRdSoftware: "Vérifier compatibilité import de fichiers DXF depuis leur logiciel CAO (SolidWorks) vers GrindSmart Suite.",
+    actionRdMechanic: "Étudier la possibilité d'un chargeur additionnel pour barres de 330mm (besoin spécifique mentionné par M. Riva).",
+    actionQuality: "Le client demande une procédure de contrôle dimensionnel automatisé intégrée - à valider avec l'équipe qualité Rollomatic.",
+    followUp: "yes"
+  },
+  files: { workshopPhotos: [], topicDocs: [], globalAttachments: [] },
+  open_general: true, open_contacts: true, open_profile: true,
+  open_workshop: true, open_topic: true, open_actions: true, open_attachments: true
+};
+
+/* ===================== BUTTONS ===================== */
+document.getElementById("btnLoadExample").addEventListener("click", () => {
+  loadDraft(EXAMPLE_DATA);
+  saveDraft();
+});
+
+document.getElementById("btnClear").addEventListener("click", () => {
+  if (!confirm("Effacer le formulaire et démarrer un nouveau rapport ?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+});
+
+document.getElementById("btnSaveDraft").addEventListener("click", saveDraft);
+
+document.getElementById("btnSubmit").addEventListener("click", () => {
+  if (!validateAll()) {
+    alert("Merci de compléter les champs obligatoires (marqués *) avant de soumettre.");
+    return;
+  }
+  document.getElementById("confirmModal").classList.add("open");
+});
+
+document.getElementById("cancelSubmit").addEventListener("click", () => {
+  document.getElementById("confirmModal").classList.remove("open");
+});
+
+document.getElementById("confirmSubmit").addEventListener("click", () => {
+  document.getElementById("confirmModal").classList.remove("open");
+  saveDraft();
+  alert("✅ Rapport soumis et sauvegardé localement.");
+});
+
+document.getElementById("confirmModal").addEventListener("click", e => {
+  if (e.target.id === "confirmModal") e.target.classList.remove("open");
+});
+
+document.getElementById("btnPdf").addEventListener("click", () => {
+  document.querySelectorAll(".section").forEach(s => s.classList.add("open"));
+  window.print();
+});
+
+/* ===================== INIT ===================== */
+window.addEventListener("load", () => {
+  RTE_IDS.forEach(id => applyPlaceholder(document.getElementById(id)));
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try { loadDraft(JSON.parse(saved)); } catch (e) { console.error(e); }
+  }
+  if (!document.getElementById("visitDate").value) {
+    document.getElementById("visitDate").value = new Date().toISOString().slice(0, 10);
+  }
+});
+</script>
+
+</body>
+</html>
