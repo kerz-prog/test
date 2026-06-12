@@ -226,6 +226,20 @@
   }
   .quote-btn:hover { background: #0089bd; }
 
+  .competitor-card { background: #fafafa; }
+  .competitor-badge {
+    display: inline-block;
+    background: #999;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+
   .empty-state {
     text-align: center;
     color: var(--rollo-gray);
@@ -384,7 +398,13 @@
   <div class="panel">
     <div class="results-header">
       <h2>🏆 Machines recommandées</h2>
-      <button class="compare-btn" id="compareBtn" disabled>Comparer la sélection (<span id="compareCount">0</span>)</button>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <label class="checkbox-compare" style="cursor:pointer;">
+          <input type="checkbox" id="showCompetitors" checked>
+          Afficher les machines concurrentes
+        </label>
+        <button class="compare-btn" id="compareBtn" disabled>Comparer la sélection (<span id="compareCount">0</span>)</button>
+      </div>
     </div>
     <div id="results"></div>
   </div>
@@ -588,6 +608,116 @@ const MACHINES = [
       "Très haute répétabilité sur grands volumes",
       "Diamètres ultra-fins Ø 0.03-3 mm"
     ]
+  },
+  {
+    id: "anca_mx7",
+    name: "ANCA MX7 Linear",
+    brand: "ANCA",
+    competitor: true,
+    tagline: "Concurrent (Australie) - rectifieuse linéaire polyvalente",
+    diameterRange: [0.5, 25],
+    shankOptions: ["1/8", "16", "32"],
+    lengthRange: [10, 350],
+    axes: [5, 6],
+    loaderCapacity: "jusqu'à 230 pièces",
+    precision: "high",
+    toolTypes: ["drill", "precision", "insert", "long", "implant"],
+    materials: ["carbide", "hss", "steel", "other"],
+    volumes: ["proto", "medium", "large", "xlarge"],
+    advantages: [
+      "Moteurs linéaires pour grande rigidité et précision dynamique",
+      "Très large polyvalence (outils ronds, inserts, outils longs)",
+      "Logiciel iGrind reconnu pour sa convivialité",
+      "Forte présence sur le marché des forets/fraises"
+    ]
+  },
+  {
+    id: "anca_gx7",
+    name: "ANCA GX7 Linear",
+    brand: "ANCA",
+    competitor: true,
+    tagline: "Concurrent (Australie) - haute précision micro-outils",
+    diameterRange: [0.1, 5],
+    shankOptions: ["1/16", "1/8"],
+    lengthRange: [10, 100],
+    axes: [5, 6],
+    loaderCapacity: "jusqu'à 150 pièces",
+    precision: "ultra",
+    toolTypes: ["micro", "dental", "implant", "precision"],
+    materials: ["carbide", "hss"],
+    volumes: ["proto", "medium", "large"],
+    advantages: [
+      "Conçue pour micro-outils et outils dentaires",
+      "Précision sub-micronique grâce aux moteurs linéaires",
+      "Bonne disponibilité de pièces et support après-vente",
+      "Interface logicielle moderne"
+    ]
+  },
+  {
+    id: "walter_helitronic_power",
+    name: "Walter Helitronic Power",
+    brand: "Walter (United Grinding)",
+    competitor: true,
+    tagline: "Concurrent (Suisse/Allemagne) - référence outils standards",
+    diameterRange: [0.5, 25],
+    shankOptions: ["1/8", "16", "32"],
+    lengthRange: [10, 330],
+    axes: [5, 6],
+    loaderCapacity: "jusqu'à 230 pièces",
+    precision: "high",
+    toolTypes: ["drill", "precision", "insert", "long"],
+    materials: ["carbide", "hss", "steel", "other"],
+    volumes: ["medium", "large", "xlarge"],
+    advantages: [
+      "Très large base installée et écosystème de service mondial",
+      "Logiciel Helitronic Tool Studio très répandu",
+      "Robustesse éprouvée pour production en série",
+      "Bonne intégration avec automatisation United Grinding"
+    ]
+  },
+  {
+    id: "walter_helicheck",
+    name: "Walter Helitronic Vision 400 L",
+    brand: "Walter (United Grinding)",
+    competitor: true,
+    tagline: "Concurrent (Suisse/Allemagne) - outils longs et de précision",
+    diameterRange: [1, 25],
+    shankOptions: ["16", "32"],
+    lengthRange: [30, 400],
+    axes: [5, 6],
+    loaderCapacity: "jusqu'à 200 pièces",
+    precision: "high",
+    toolTypes: ["long", "precision", "drill", "implant"],
+    materials: ["carbide", "hss", "steel"],
+    volumes: ["medium", "large", "xlarge"],
+    advantages: [
+      "Conçue pour les outils longs jusqu'à 400 mm",
+      "Grande stabilité thermique pour séries longues",
+      "Mesure intégrée (Vision) pour contrôle qualité en ligne",
+      "Marque bien établie en Europe"
+    ]
+  },
+  {
+    id: "schneeberger_mvc",
+    name: "Schneeberger MVC 1000",
+    brand: "Schneeberger",
+    competitor: true,
+    tagline: "Concurrent (Suisse) - rectification de précision haut de gamme",
+    diameterRange: [0.5, 20],
+    shankOptions: ["1/8", "16"],
+    lengthRange: [10, 300],
+    axes: [5, 6],
+    loaderCapacity: "jusqu'à 120 pièces",
+    precision: "ultra",
+    toolTypes: ["precision", "drill", "implant", "dental", "insert"],
+    materials: ["carbide", "hss", "steel", "other"],
+    volumes: ["proto", "medium", "large"],
+    advantages: [
+      "Construction suisse réputée pour rigidité et précision thermique",
+      "Excellente finition de surface",
+      "Bonne polyvalence outils ronds et inserts",
+      "Solide réputation qualité 'Swiss made'"
+    ]
   }
 ];
 
@@ -772,7 +902,10 @@ function scoreColor(score) {
 }
 
 function render() {
-  const results = MACHINES.map(m => ({ machine: m, score: computeScore(m) }))
+  const showCompetitors = document.getElementById("showCompetitors").checked;
+  const results = MACHINES
+    .filter(m => showCompetitors || !m.competitor)
+    .map(m => ({ machine: m, score: computeScore(m) }))
     .sort((a, b) => b.score - a.score);
 
   const container = document.getElementById("results");
@@ -786,14 +919,15 @@ function render() {
   results.forEach(({ machine, score }) => {
     const card = document.createElement("div");
     card.className = "machine-card";
-    card.style.borderLeftColor = scoreColor(score);
+    card.style.borderLeftColor = machine.competitor ? "#999" : scoreColor(score);
+    if (machine.competitor) card.classList.add("competitor-card");
 
     const checked = compareSelection.has(machine.id) ? "checked" : "";
 
     card.innerHTML = `
       <div class="top-row">
         <div>
-          <h3>${machine.name}</h3>
+          <h3>${machine.name} ${machine.competitor ? '<span class="competitor-badge">CONCURRENT</span>' : ''}</h3>
           <div class="tagline">${machine.tagline}</div>
         </div>
         <div class="score-badge">
@@ -836,7 +970,7 @@ function render() {
           <input type="checkbox" class="compare-check" data-id="${machine.id}" ${checked}>
           Ajouter à la comparaison
         </label>
-        <button class="quote-btn" data-name="${machine.name}">📩 Demander un devis</button>
+        ${machine.competitor ? '' : `<button class="quote-btn" data-name="${machine.name}">📩 Demander un devis</button>`}
       </div>
     `;
     container.appendChild(card);
@@ -953,6 +1087,7 @@ initPillGroup("lengthGroup", "length");
 initPillGroup("volumeGroup", "volume");
 initPillGroup("precisionGroup", "precision");
 initPillGroup("axesGroup", "axes", false);
+document.getElementById("showCompetitors").addEventListener("change", render);
 render();
 </script>
 
