@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rollomatic - Sélecteur de machine de meulage</title>
+<style>
+  :root {
+    --rollo-blue: #003366;
+    --rollo-blue-light: #0066a1;
+    --rollo-gray: #5a6877;
+    --rollo-gray-light: #f0f3f6;
+    --rollo-accent: #00a3e0;
+    --white: #ffffff;
+    --shadow: 0 4px 16px rgba(0,51,102,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background: var(--rollo-gray-light);
+    color: #222;
+    line-height: 1.5;
+  }
+  header {
+    background: linear-gradient(135deg, var(--rollo-blue), var(--rollo-blue-light));
+    color: #fff;
+    padding: 28px 20px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: 0.5px; }
+  header p { margin-top: 6px; font-size: 0.95rem; opacity: 0.9; }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 900px) {
+    .container { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--white);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+  }
+  .panel h2 {
+    color: var(--rollo-blue);
+    font-size: 1.1rem;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .criteria-block { margin-bottom: 22px; }
+  .criteria-block label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--rollo-blue);
+    margin-bottom: 8px;
+    font-size: 0.92rem;
+  }
+  .icon { font-size: 1.15rem; }
+
+  select, input[type=range] {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #d4dce3;
+    font-size: 0.92rem;
+    background: var(--white);
+    color: #222;
+  }
+  select:focus { outline: 2px solid var(--rollo-accent); }
+
+  .pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    border: 1px solid #d4dce3;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    background: var(--white);
+    color: var(--rollo-gray);
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .pill:hover { border-color: var(--rollo-accent); }
+  .pill.active {
+    background: var(--rollo-accent);
+    color: #fff;
+    border-color: var(--rollo-accent);
+    font-weight: 600;
+  }
+
+  .range-value {
+    font-size: 0.82rem;
+    color: var(--rollo-gray);
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .results-header h2 { color: var(--rollo-blue); font-size: 1.3rem; }
+  .compare-btn {
+    background: var(--rollo-blue);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  .compare-btn:hover { background: var(--rollo-blue-light); }
+  .compare-btn:disabled { background: #c5cdd4; cursor: not-allowed; }
+
+  .machine-card {
+    background: var(--white);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 18px;
+    border-left: 6px solid var(--rollo-accent);
+    animation: fadeIn 0.4s ease;
+    transition: transform 0.2s ease;
+  }
+  .machine-card:hover { transform: translateY(-2px); }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .machine-card .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .machine-card h3 { color: var(--rollo-blue); font-size: 1.25rem; }
+  .machine-card .tagline { color: var(--rollo-gray); font-size: 0.88rem; margin-top: 2px; }
+
+  .score-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 70px;
+  }
+  .score-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+  }
+  .score-label { font-size: 0.72rem; color: var(--rollo-gray); margin-top: 4px; }
+
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .spec-item {
+    background: var(--rollo-gray-light);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  .spec-item .spec-label { color: var(--rollo-gray); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;}
+  .spec-item .spec-value { color: var(--rollo-blue); font-weight: 600; margin-top: 2px; }
+
+  .advantages {
+    margin-top: 10px;
+    font-size: 0.88rem;
+  }
+  .advantages ul { padding-left: 20px; margin-top: 4px; }
+  .advantages li { color: #444; margin-bottom: 2px; }
+
+  .card-actions {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .checkbox-compare {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--rollo-gray);
+    cursor: pointer;
+  }
+  .quote-btn {
+    background: var(--rollo-accent);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: auto;
+    transition: background 0.2s;
+  }
+  .quote-btn:hover { background: #0089bd; }
+
+  .empty-state {
+    text-align: center;
+    color: var(--rollo-gray);
+    padding: 40px 20px;
+  }
+
+  /* Comparison modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,20,40,0.55);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 100;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 14px;
+    max-width: 1000px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+    animation: fadeIn 0.3s ease;
+  }
+  .modal h2 { color: var(--rollo-blue); margin-bottom: 16px; }
+  .modal-close {
+    background: var(--rollo-gray-light);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    float: right;
+    font-weight: 600;
+    color: var(--rollo-blue);
+  }
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 0.88rem;
+  }
+  .compare-table th, .compare-table td {
+    border: 1px solid #e1e7ec;
+    padding: 8px 10px;
+    text-align: left;
+  }
+  .compare-table th { background: var(--rollo-gray-light); color: var(--rollo-blue); }
+  .compare-table td:first-child { font-weight: 600; color: var(--rollo-gray); white-space: nowrap; }
+
+  /* Quote modal */
+  .quote-form label { display:block; margin-top:10px; font-weight:600; color:var(--rollo-blue); font-size:0.88rem;}
+  .quote-form input, .quote-form textarea {
+    width:100%; padding:8px 10px; border-radius:8px; border:1px solid #d4dce3; margin-top:4px; font-size:0.9rem;
+  }
+  .quote-form button {
+    margin-top:16px; background: var(--rollo-blue); color:#fff; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:600;
+  }
+  .success-msg { color: #1a8a3a; font-weight: 600; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🛠️ Sélecteur de Machine de Meulage Rollomatic</h1>
+  <p>Trouvez la machine GrindSmart®, ShapeSmart® ou NanoGrind™ adaptée à vos besoins</p>
+</header>
+
+<div class="container">
+  <!-- Criteria Panel -->
+  <div class="panel">
+    <h2>📋 Vos critères</h2>
+
+    <div class="criteria-block">
+      <label><span class="icon">🦷</span> Type d'outil à meuler</label>
+      <select id="toolType">
+        <option value="dental">Outils dentaires (burs, instruments)</option>
+        <option value="implant">Implantologie / CAD-CAM</option>
+        <option value="micro">Micro-outils (diamètre très fin)</option>
+        <option value="drill">Forets et fraises</option>
+        <option value="precision">Outils de précision industrielle</option>
+        <option value="insert">Inserts indexables</option>
+        <option value="long">Outils longs (implants, chirurgie)</option>
+      </select>
+    </div>
+
+    <div class="criteria-block">
+      <label><span class="icon">📏</span> Diamètre de l'outil : <span id="diameterLabel"></span></label>
+      <input type="range" id="diameter" min="0" max="6" step="1" value="3">
+      <div class="range-value" id="diameterRangeText"></div>
+    </div>
+
+    <div class="criteria-block">
+      <label><span class="icon">📐</span> Longueur de la tige (shank)</label>
+      <div class="pill-group" id="shankGroup">
+        <div class="pill" data-value="1/16">1/16" (1.6 mm) - micro</div>
+        <div class="pill" data-value="1/8">1/8" (3.175 mm) - très fin</div>
+        <div class="pill" data-value="16">Jusqu'à 16 mm standard</div>
+        <div class="pill" data-value="32">Jusqu'à 32 mm grands outils</div>
+      </div>
+    </div>
+
+    <div class="criteria-block">
+      <label><span class="icon">📏</span> Longueur totale de l'outil</label>
+      <div class="pill-group" id="lengthGroup">
+        <div class="pill" data-value="short">Courte (≤ 30 mm)</div>
+        <div class="pill" data-value="medium">Moyenne (30-150 mm)</div>
+        <div class="pill" data-value="long">Longue (150-300 mm)</div>
+        <div class="pill" data-value="xlong">Très longue (300-500 mm)</div>
+      </div>
+    </div>
+
+    <div class="criteria-block">
+      <label><span class="icon">🔩</span> Matériau de l'outil</label>
+      <select id="material">
+        <option value="carbide">Carbure (carbide) - très précis</option>
+        <option value="hss">Acier rapide (HSS)</option>
+        <option value="steel">Acier inoxydable</option>
+        <option value="other">Autres matériaux durs</option>
+      </select>
+    </div>
+
+    <div class="criteria-block">
+      <label><span class="icon">📦</span> Volume de production</label>
+      <div class="pill-group" id="volumeGroup">
+        <div class="pill" data-value="proto">Prototype / petite série (&lt; 100)</div>
+        <div class="pill" data-value="medium">Série moyenne (100-1000)</div>
+        <div class="pill" data-value="large">Production importante (&gt; 1000)</div>
+        <div class="pill" data-value="xlarge">Production très haute (&gt; 10000)</div>
+      </div>
+    </div>
+
+    <div class="criteria-block">
+      <label><span class="icon">🎯</span> Précision requise</label>
+      <div class="pill-group" id="precisionGroup">
+        <div class="pill" data-value="standard">Standard (± 0.01 mm)</div>
+        <div class="pill" data-value="high">Haute (± 0.005 mm)</div>
+        <div class="pill" data-value="ultra">Ultra haute (&lt; 0.002 mm)</div>
+      </div>
+    </div>
+
+    <div class="criteria-block">
+      <label><span class="icon">⚙️</span> Nombre d'axes préféré</label>
+      <div class="pill-group" id="axesGroup">
+        <div class="pill" data-value="3">3 axes</div>
+        <div class="pill" data-value="4">4 axes</div>
+        <div class="pill" data-value="5">5 axes</div>
+        <div class="pill" data-value="6">6 axes</div>
+        <div class="pill active" data-value="any">Peu importe</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results Panel -->
+  <div class="panel">
+    <div class="results-header">
+      <h2>🏆 Machines recommandées</h2>
+      <button class="compare-btn" id="compareBtn" disabled>Comparer la sélection (<span id="compareCount">0</span>)</button>
+    </div>
+    <div id="results"></div>
+  </div>
+</div>
+
+<!-- Comparison Modal -->
+<div class="modal-overlay" id="compareModal">
+  <div class="modal">
+    <button class="modal-close" id="closeCompare">Fermer ✕</button>
+    <h2>Comparaison côte à côte</h2>
+    <div id="compareContent"></div>
+  </div>
+</div>
+
+<!-- Quote Modal -->
+<div class="modal-overlay" id="quoteModal">
+  <div class="modal" style="max-width:480px;">
+    <button class="modal-close" id="closeQuote">Fermer ✕</button>
+    <h2>Demande de devis</h2>
+    <p style="color:var(--rollo-gray); font-size:0.9rem;">Machine sélectionnée : <strong id="quoteMachine"></strong></p>
+    <form class="quote-form" id="quoteForm">
+      <label>Nom complet
+        <input type="text" id="quoteName" required>
+      </label>
+      <label>Email
+        <input type="email" id="quoteEmail" required>
+      </label>
+      <label>Entreprise
+        <input type="text" id="quoteCompany">
+      </label>
+      <label>Message
+        <textarea id="quoteMessage" rows="3" placeholder="Détails de votre projet..."></textarea>
+      </label>
+      <button type="submit">Envoyer la demande</button>
+      <div class="success-msg" id="quoteSuccess" style="display:none;">✅ Merci ! Votre demande a été enregistrée. Notre équipe vous contactera rapidement.</div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------
+   DATA: Rollomatic machine catalog
+--------------------------------------------------- */
+const MACHINES = [
+  {
+    id: "nano56",
+    name: "GrindSmart® Nano5 / Nano6",
+    tagline: "Spécialiste des micro-outils de très haute précision",
+    diameterRange: [0.03, 6.35],
+    shankOptions: ["1/16", "1/8"],
+    lengthRange: [10, 150],
+    axes: [5, 6],
+    loaderCapacity: "jusqu'à 100 pièces (option robot)",
+    precision: "ultra",
+    toolTypes: ["micro", "dental", "implant", "precision"],
+    materials: ["carbide", "hss", "other"],
+    volumes: ["proto", "medium", "large"],
+    advantages: [
+      "Précision sub-micronique pour micro-forets et micro-fraises",
+      "Idéal pour outils Ø 0.03 à 6.35 mm",
+      "Excellente répétabilité pour la production de micro-outils",
+      "Compact et économe en énergie"
+    ]
+  },
+  {
+    id: "gs530",
+    name: "GrindSmart® 530 / 530XW",
+    tagline: "Référence pour les outils dentaires et de précision",
+    diameterRange: [0.1, 12],
+    shankOptions: ["1/8", "16"],
+    lengthRange: [10, 150],
+    axes: [5, 6],
+    loaderCapacity: "jusqu'à 90 pièces",
+    precision: "high",
+    toolTypes: ["dental", "implant", "micro", "precision"],
+    materials: ["carbide", "hss", "steel"],
+    volumes: ["proto", "medium", "large"],
+    advantages: [
+      "Conçue spécifiquement pour les outils dentaires et CAD/CAM",
+      "Excellent rapport précision/productivité",
+      "Configuration 5 ou 6 axes selon besoins",
+      "Large bibliothèque de meules pour applications dentaires"
+    ]
+  },
+  {
+    id: "gs620",
+    name: "GrindSmart® 620XS",
+    tagline: "Polyvalence pour forets, fraises et outils de précision",
+    diameterRange: [0.1, 16],
+    shankOptions: ["1/8", "16"],
+    lengthRange: [30, 300],
+    axes: [5, 6],
+    loaderCapacity: "jusqu'à 230 pièces",
+    precision: "high",
+    toolTypes: ["drill", "precision", "dental", "implant", "long"],
+    materials: ["carbide", "hss", "steel", "other"],
+    volumes: ["proto", "medium", "large", "xlarge"],
+    advantages: [
+      "Plage étendue : Ø 0.1-16 mm, longueur 30-300 mm",
+      "Excellente polyvalence pour ateliers multi-produits",
+      "Grande capacité de chargeur pour la production en série",
+      "Très bon compromis précision / flexibilité"
+    ]
+  },
+  {
+    id: "gs630",
+    name: "GrindSmart® 630XW",
+    tagline: "6 axes, flexibilité maximale pour inserts et géométries complexes",
+    diameterRange: [1, 32],
+    shankOptions: ["16", "32"],
+    lengthRange: [30, 300],
+    axes: [6],
+    loaderCapacity: "jusqu'à 300 pièces",
+    precision: "high",
+    toolTypes: ["insert", "precision", "drill", "long"],
+    materials: ["carbide", "hss", "steel", "other"],
+    volumes: ["medium", "large", "xlarge"],
+    advantages: [
+      "6 axes pour géométries d'outils complexes (hélices variables, etc.)",
+      "Adaptée aux inserts indexables et outils de coupe variés",
+      "Grande flexibilité de configuration",
+      "Robuste pour production importante"
+    ]
+  },
+  {
+    id: "gs660",
+    name: "GrindSmart® 660XW",
+    tagline: "Très compacte, dédiée aux outils de coupe courants",
+    diameterRange: [0.1, 12.7],
+    shankOptions: ["1/8", "16"],
+    lengthRange: [10, 150],
+    axes: [5, 6],
+    loaderCapacity: "jusqu'à 100 pièces",
+    precision: "high",
+    toolTypes: ["drill", "precision", "dental"],
+    materials: ["carbide", "hss", "steel"],
+    volumes: ["proto", "medium", "large"],
+    advantages: [
+      "Empreinte au sol très réduite (gain de place atelier)",
+      "Idéale pour Ø 0.1-12.7 mm",
+      "Excellent choix pour PME et ateliers de réaffûtage",
+      "Bon rapport qualité/prix pour outils de coupe standards"
+    ]
+  },
+  {
+    id: "gs6000",
+    name: "GrindSmart® 6000XL",
+    tagline: "Hydrospatique 6 axes pour gros outils en production",
+    diameterRange: [3, 32],
+    shankOptions: ["16", "32"],
+    lengthRange: [30, 500],
+    axes: [6],
+    loaderCapacity: "jusqu'à 300 pièces",
+    precision: "high",
+    toolTypes: ["drill", "precision", "insert", "long"],
+    materials: ["carbide", "hss", "steel", "other"],
+    volumes: ["medium", "large", "xlarge"],
+    advantages: [
+      "Paliers hydrospatiques pour rigidité et finition exceptionnelles",
+      "Capacité Ø 3-32 mm, longueur jusqu'à 500 mm",
+      "6 axes pour une flexibilité totale",
+      "Conçue pour la production intensive de gros outils"
+    ]
+  },
+  {
+    id: "np3",
+    name: "ShapeSmart® NP3",
+    tagline: "Rectifieuse cylindrique pour outils longs",
+    diameterRange: [0.5, 20],
+    shankOptions: ["1/8", "16", "32"],
+    lengthRange: [30, 500],
+    axes: [4, 5],
+    loaderCapacity: "alimentation barre / chargeur longue course",
+    precision: "high",
+    toolTypes: ["long", "implant", "precision", "drill"],
+    materials: ["carbide", "hss", "steel", "other"],
+    volumes: ["proto", "medium", "large"],
+    advantages: [
+      "Spécialisée dans les outils longs (implants, broches chirurgicales)",
+      "Capacité Ø 0.5-20 mm jusqu'à 500 mm de longueur",
+      "Rectification cylindrique de haute précision",
+      "Idéale pour applications médicales et chirurgicales"
+    ]
+  },
+  {
+    id: "nanogrind4000",
+    name: "NanoGrind™ 4000XD",
+    tagline: "Production haute cadence de micro-forets",
+    diameterRange: [0.03, 3],
+    shankOptions: ["1/16", "1/8"],
+    lengthRange: [10, 60],
+    axes: [5],
+    loaderCapacity: "jusqu'à 500 pièces (production continue)",
+    precision: "ultra",
+    toolTypes: ["micro", "drill", "dental"],
+    materials: ["carbide"],
+    volumes: ["large", "xlarge"],
+    advantages: [
+      "Optimisée pour la production de masse de micro-forets",
+      "Automatisation poussée, fonctionnement continu",
+      "Très haute répétabilité sur grands volumes",
+      "Diamètres ultra-fins Ø 0.03-3 mm"
+    ]
+  }
+];
+
+const DIAMETER_BUCKETS = [
+  { label: "Micro (0.03 - 0.08 mm)", range: [0.03, 0.08] },
+  { label: "Très fin (0.1 - 1 mm)", range: [0.1, 1] },
+  { label: "Petit (1 - 3 mm)", range: [1, 3] },
+  { label: "Moyen (3 - 6 mm)", range: [3, 6] },
+  { label: "Standard (6 - 12 mm)", range: [6, 12] },
+  { label: "Grand (12 - 20 mm)", range: [12, 20] },
+  { label: "Très grand (20 - 32 mm)", range: [20, 32] }
+];
+
+const LENGTH_RANGES = {
+  short: [0, 30],
+  medium: [30, 150],
+  long: [150, 300],
+  xlong: [300, 500]
+};
+
+const SHANK_MM = { "1/16": 1.6, "1/8": 3.175, "16": 16, "32": 32 };
+
+const PRECISION_RANK = { standard: 1, high: 2, ultra: 3 };
+
+/* ---------------------------------------------------
+   STATE
+--------------------------------------------------- */
+const state = {
+  toolType: "dental",
+  diameterBucket: 3,
+  shank: null,
+  length: null,
+  material: "carbide",
+  volume: null,
+  precision: null,
+  axes: "any"
+};
+
+const compareSelection = new Set();
+
+/* ---------------------------------------------------
+   UI INIT
+--------------------------------------------------- */
+function initDiameterSlider() {
+  const slider = document.getElementById("diameter");
+  slider.max = DIAMETER_BUCKETS.length - 1;
+  slider.value = 3;
+  updateDiameterLabel();
+  slider.addEventListener("input", () => {
+    state.diameterBucket = parseInt(slider.value, 10);
+    updateDiameterLabel();
+    render();
+  });
+}
+
+function updateDiameterLabel() {
+  const bucket = DIAMETER_BUCKETS[state.diameterBucket];
+  document.getElementById("diameterLabel").textContent = bucket.label;
+  document.getElementById("diameterRangeText").textContent =
+    `Plage sélectionnée : Ø ${bucket.range[0]} - ${bucket.range[1]} mm`;
+}
+
+function initPillGroup(groupId, stateKey, allowDeselect = true) {
+  const group = document.getElementById(groupId);
+  group.querySelectorAll(".pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const value = pill.dataset.value;
+      if (pill.classList.contains("active") && allowDeselect && stateKey !== "axes") {
+        pill.classList.remove("active");
+        state[stateKey] = null;
+      } else {
+        group.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+        pill.classList.add("active");
+        state[stateKey] = value;
+      }
+      render();
+    });
+  });
+}
+
+document.getElementById("toolType").addEventListener("change", e => {
+  state.toolType = e.target.value;
+  render();
+});
+document.getElementById("material").addEventListener("change", e => {
+  state.material = e.target.value;
+  render();
+});
+
+/* ---------------------------------------------------
+   SCORING
+--------------------------------------------------- */
+function rangesOverlap(a, b) {
+  return a[0] <= b[1] && b[0] <= a[1];
+}
+
+function computeScore(machine) {
+  let score = 0;
+  let maxScore = 0;
+
+  // Tool type (weight 25)
+  maxScore += 25;
+  if (machine.toolTypes.includes(state.toolType)) score += 25;
+
+  // Diameter (weight 25)
+  maxScore += 25;
+  const bucket = DIAMETER_BUCKETS[state.diameterBucket].range;
+  if (rangesOverlap(machine.diameterRange, bucket)) {
+    // full overlap bonus vs partial
+    const fullyContained = bucket[0] >= machine.diameterRange[0] && bucket[1] <= machine.diameterRange[1];
+    score += fullyContained ? 25 : 15;
+  }
+
+  // Shank (weight 10)
+  maxScore += 10;
+  if (state.shank) {
+    if (machine.shankOptions.includes(state.shank)) {
+      score += 10;
+    } else {
+      score += 3; // partial credit
+    }
+  } else {
+    score += 10; // no preference
+  }
+
+  // Total length (weight 15)
+  maxScore += 15;
+  if (state.length) {
+    const reqRange = LENGTH_RANGES[state.length];
+    if (rangesOverlap(machine.lengthRange, reqRange)) {
+      const fullyContained = reqRange[0] >= machine.lengthRange[0] && reqRange[1] <= machine.lengthRange[1];
+      score += fullyContained ? 15 : 8;
+    }
+  } else {
+    score += 15;
+  }
+
+  // Material (weight 5)
+  maxScore += 5;
+  if (machine.materials.includes(state.material)) score += 5;
+
+  // Volume (weight 10)
+  maxScore += 10;
+  if (state.volume) {
+    if (machine.volumes.includes(state.volume)) score += 10;
+    else score += 2;
+  } else {
+    score += 10;
+  }
+
+  // Precision (weight 7)
+  maxScore += 7;
+  if (state.precision) {
+    const reqRank = PRECISION_RANK[state.precision];
+    const machRank = PRECISION_RANK[machine.precision];
+    if (machRank >= reqRank) score += 7;
+    else score += 2;
+  } else {
+    score += 7;
+  }
+
+  // Axes (weight 3)
+  maxScore += 3;
+  if (state.axes !== "any") {
+    if (machine.axes.includes(parseInt(state.axes, 10))) score += 3;
+    else score += 1;
+  } else {
+    score += 3;
+  }
+
+  return Math.round((score / maxScore) * 100);
+}
+
+/* ---------------------------------------------------
+   RENDERING
+--------------------------------------------------- */
+function scoreColor(score) {
+  if (score >= 85) return "#1a8a3a";
+  if (score >= 65) return "#0066a1";
+  if (score >= 45) return "#e0a000";
+  return "#c0392b";
+}
+
+function render() {
+  const results = MACHINES.map(m => ({ machine: m, score: computeScore(m) }))
+    .sort((a, b) => b.score - a.score);
+
+  const container = document.getElementById("results");
+  container.innerHTML = "";
+
+  if (results.length === 0) {
+    container.innerHTML = `<div class="empty-state">Aucune machine ne correspond. Ajustez vos critères.</div>`;
+    return;
+  }
+
+  results.forEach(({ machine, score }) => {
+    const card = document.createElement("div");
+    card.className = "machine-card";
+    card.style.borderLeftColor = scoreColor(score);
+
+    const checked = compareSelection.has(machine.id) ? "checked" : "";
+
+    card.innerHTML = `
+      <div class="top-row">
+        <div>
+          <h3>${machine.name}</h3>
+          <div class="tagline">${machine.tagline}</div>
+        </div>
+        <div class="score-badge">
+          <div class="score-circle" style="background:${scoreColor(score)}">${score}%</div>
+          <div class="score-label">Compatibilité</div>
+        </div>
+      </div>
+      <div class="specs-grid">
+        <div class="spec-item">
+          <div class="spec-label">Diamètre</div>
+          <div class="spec-value">Ø ${machine.diameterRange[0]} - ${machine.diameterRange[1]} mm</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">Longueur outil</div>
+          <div class="spec-value">${machine.lengthRange[0]} - ${machine.lengthRange[1]} mm</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">Tige (shank)</div>
+          <div class="spec-value">${machine.shankOptions.map(s => s.includes("/") ? s + '"' : s + " mm").join(" / ")}</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">Axes</div>
+          <div class="spec-value">${machine.axes.join(" / ")} axes</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">Capacité chargeur</div>
+          <div class="spec-value">${machine.loaderCapacity}</div>
+        </div>
+        <div class="spec-item">
+          <div class="spec-label">Précision typique</div>
+          <div class="spec-value">${precisionText(machine.precision)}</div>
+        </div>
+      </div>
+      <div class="advantages">
+        <strong>Avantages principaux :</strong>
+        <ul>${machine.advantages.map(a => `<li>${a}</li>`).join("")}</ul>
+      </div>
+      <div class="card-actions">
+        <label class="checkbox-compare">
+          <input type="checkbox" class="compare-check" data-id="${machine.id}" ${checked}>
+          Ajouter à la comparaison
+        </label>
+        <button class="quote-btn" data-name="${machine.name}">📩 Demander un devis</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  // wire up checkboxes
+  container.querySelectorAll(".compare-check").forEach(cb => {
+    cb.addEventListener("change", e => {
+      const id = e.target.dataset.id;
+      if (e.target.checked) {
+        if (compareSelection.size >= 3) {
+          e.target.checked = false;
+          alert("Vous pouvez comparer au maximum 3 machines.");
+          return;
+        }
+        compareSelection.add(id);
+      } else {
+        compareSelection.delete(id);
+      }
+      updateCompareButton();
+    });
+  });
+
+  // wire up quote buttons
+  container.querySelectorAll(".quote-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      openQuoteModal(e.target.dataset.name);
+    });
+  });
+
+  updateCompareButton();
+}
+
+function precisionText(p) {
+  if (p === "ultra") return "< 0.002 mm";
+  if (p === "high") return "± 0.005 mm";
+  return "± 0.01 mm";
+}
+
+function updateCompareButton() {
+  const btn = document.getElementById("compareBtn");
+  document.getElementById("compareCount").textContent = compareSelection.size;
+  btn.disabled = compareSelection.size < 2;
+}
+
+/* ---------------------------------------------------
+   COMPARISON MODAL
+--------------------------------------------------- */
+document.getElementById("compareBtn").addEventListener("click", () => {
+  const selected = MACHINES.filter(m => compareSelection.has(m.id));
+  const content = document.getElementById("compareContent");
+
+  const rows = [
+    { label: "Score de compatibilité", get: m => `${computeScore(m)}%` },
+    { label: "Diamètre", get: m => `Ø ${m.diameterRange[0]} - ${m.diameterRange[1]} mm` },
+    { label: "Longueur outil", get: m => `${m.lengthRange[0]} - ${m.lengthRange[1]} mm` },
+    { label: "Tige (shank)", get: m => m.shankOptions.map(s => s.includes("/") ? s + '"' : s + " mm").join(" / ") },
+    { label: "Axes", get: m => m.axes.join(" / ") + " axes" },
+    { label: "Capacité chargeur", get: m => m.loaderCapacity },
+    { label: "Précision typique", get: m => precisionText(m.precision) },
+    { label: "Types d'outils", get: m => m.toolTypes.join(", ") },
+    { label: "Matériaux", get: m => m.materials.join(", ") }
+  ];
+
+  let html = `<table class="compare-table"><thead><tr><th>Critère</th>${selected.map(m => `<th>${m.name}</th>`).join("")}</tr></thead><tbody>`;
+  rows.forEach(row => {
+    html += `<tr><td>${row.label}</td>${selected.map(m => `<td>${row.get(m)}</td>`).join("")}</tr>`;
+  });
+  html += `</tbody></table>`;
+
+  content.innerHTML = html;
+  document.getElementById("compareModal").classList.add("open");
+});
+
+document.getElementById("closeCompare").addEventListener("click", () => {
+  document.getElementById("compareModal").classList.remove("open");
+});
+
+/* ---------------------------------------------------
+   QUOTE MODAL
+--------------------------------------------------- */
+function openQuoteModal(machineName) {
+  document.getElementById("quoteMachine").textContent = machineName;
+  document.getElementById("quoteForm").reset();
+  document.getElementById("quoteSuccess").style.display = "none";
+  document.getElementById("quoteModal").classList.add("open");
+}
+
+document.getElementById("closeQuote").addEventListener("click", () => {
+  document.getElementById("quoteModal").classList.remove("open");
+});
+
+document.getElementById("quoteForm").addEventListener("submit", e => {
+  e.preventDefault();
+  document.getElementById("quoteSuccess").style.display = "block";
+  setTimeout(() => {
+    document.getElementById("quoteModal").classList.remove("open");
+  }, 1800);
+});
+
+// close modals on overlay click
+[document.getElementById("compareModal"), document.getElementById("quoteModal")].forEach(modal => {
+  modal.addEventListener("click", e => {
+    if (e.target === modal) modal.classList.remove("open");
+  });
+});
+
+/* ---------------------------------------------------
+   INIT
+--------------------------------------------------- */
+initDiameterSlider();
+initPillGroup("shankGroup", "shank");
+initPillGroup("lengthGroup", "length");
+initPillGroup("volumeGroup", "volume");
+initPillGroup("precisionGroup", "precision");
+initPillGroup("axesGroup", "axes", false);
+render();
+</script>
+
+</body>
+</html>
